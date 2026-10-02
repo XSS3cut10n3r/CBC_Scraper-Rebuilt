@@ -17,17 +17,7 @@ from .auth import find_request
 from .config import YEAR_TASKS
 from .stats import leaderboard, submissions
 
-BANNER = r'''
-     .-------------------------------.
-     |   N   S   A  /  CODEBREAKER    |
-     |       /\         /\           |
-     |  ____/  \_______/  \____      |
-     |  \        CBC          /      |
-     |   \_____  /\  ________/       |
-     |         \/  \/                |
-     '-------------------------------'
-         UNOFFICIAL STATS TERMINAL
-'''
+from .banner import print_banner
 
 
 def save(path, text):
@@ -46,7 +36,7 @@ def save(path, text):
 def render(report, args):
     console = Console()
     if not args.no_banner:
-        console.print(BANNER, style='bold cyan', markup=False)
+        print_banner(console)
     if report['kind'] == 'submissions':
         table = Table('Task', 'Attempts', 'Status', 'Attempt span (hours)')
         for task, row in report['stats'].items():
@@ -141,7 +131,7 @@ def setup(args):
 def menu():
     from rich.prompt import Prompt
     console = Console()
-    console.print(BANNER, style='bold cyan', markup=False)
+    print_banner(console)
     while True:
         console.print("\n1. School leaderboards and fastest solves\n"
                       "2. My submissions\n3. View saved leaderboards (offline)\n"
