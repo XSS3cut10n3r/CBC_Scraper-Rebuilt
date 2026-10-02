@@ -12,6 +12,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
+from rich.box import Box
 
 from .client import Client, ScraperError, request_headers
 from .auth import find_request, REQUEST_TEMPLATE
@@ -129,8 +130,9 @@ def create_request_template(console):
     )
     console.print()
     console.print(Panel(instructions + '\n\n[dim]' + status + '[/dim]',
-                        title='[bold cyan]One-time browser login setup[/bold cyan]',
-                        border_style='cyan', padding=(1, 2)))
+                        title='[bold cyan]LOGIN SETUP INSTRUCTIONS[/bold cyan]',
+                        box=Box('####\n#  #\n####\n#  #\n####\n####\n#  #\n####\n', ascii=True),
+                        safe_box=False, border_style='bold cyan', padding=(1, 2)))
     console.print()
     return 0
 
