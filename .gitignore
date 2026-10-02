@@ -1,0 +1,26 @@
+# Data files
+data/
+
+# Virtual environments
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Local authentication
+.env
+.env.*
+request.txt
+*.cookies
+
+sample_request.txt

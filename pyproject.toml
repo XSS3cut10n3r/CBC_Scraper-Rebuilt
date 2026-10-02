@@ -1,0 +1,16 @@
+[project]
+name = "cbc_scraper"
+version = "0.2.0"
+description = "NSA Codebreaker stats"
+requires-python = ">=3.8"
+dependencies = [
+    "rich==14.1.0",
+    "requests==2.32.5",
+]
+
+[project.scripts]
+cbc-scraper = "cbc_scraper.cli:main"
+
+[tool.setuptools]
+packages = ["cbc_scraper"]
+py-modules = ["scrape_leaderboards", "scrape_submissions"]
