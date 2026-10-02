@@ -38,11 +38,16 @@ def render(report, args):
     if not args.no_banner:
         print_banner(console)
     if report['kind'] == 'submissions':
-        table = Table('Task', 'Attempts', 'Status', 'Attempt span (hours)')
+        show_status = any(row['status'] != 'Unknown' for row in report['stats'].values())
+        columns = ['Task', 'Attempts'] + (['Status'] if show_status else []) + ['Attempt span']
+        table = Table(*columns)
         for task, row in report['stats'].items():
-            table.add_row(task, str(row['attempts']), row['status'], str(row['attempt_span_hours']))
+            cells = [task, str(row['attempts'])]
+            if show_status:
+                cells.append(row['status'] if row['status'] != 'Unknown' else 'Not provided')
+            table.add_row(*cells, row['attempt_span'])
         console.print(table)
-        console.print('Attempt span is elapsed time between submissions, not active solving time. Unknown means no explicit success field.')
+        console.print('Attempt span is time between your first and last submission, not active solving time. A single submission has a span of 0h 00m 00s.')
         return
     stats = report['stats']
     console.print(f"{report['year']} | {stats['participants']:,} participants | {stats['school_count']:,} schools", markup=False)
@@ -95,9 +100,10 @@ def export(report, fmt):
             for school in row['schools']:
                 writer.writerow([report['year'], task, school['school'], school['solvers'], school['solve_rate'], school['first_solve']])
     else:
-        writer.writerow(['task', 'attempts', 'status', 'first_attempt', 'last_attempt', 'attempt_span_hours'])
+        fields = ['attempts', 'status', 'first_attempt', 'last_attempt', 'attempt_span_hours', 'attempt_span_seconds', 'attempt_span']
+        writer.writerow(['task'] + fields)
         for task, row in report['stats'].items():
-            writer.writerow([task] + list(row.values()))
+            writer.writerow([task] + [row[field] for field in fields])
     return out.getvalue()
 
 
