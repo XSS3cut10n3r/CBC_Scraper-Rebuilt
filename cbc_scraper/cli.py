@@ -15,6 +15,7 @@ from rich.table import Table
 from .client import Client, ScraperError, request_headers
 from .auth import find_request
 from .config import YEAR_TASKS
+from .history import browse
 from .stats import leaderboard, submissions
 
 from .banner import print_banner
@@ -73,7 +74,7 @@ def render(report, args):
 
 def parser():
     p = argparse.ArgumentParser(description='Unofficial NSA Codebreaker statistics')
-    p.add_argument('command', choices=['leaderboard', 'submissions', 'setup', 'menu'], nargs='?', default='leaderboard')
+    p.add_argument('command', choices=['leaderboard', 'submissions', 'setup', 'menu', 'offline', 'history'], nargs='?', default='leaderboard')
     p.add_argument('--year', type=int, help='Archived challenge year (omit for current board)')
     p.add_argument('--all-years', action='store_true', help='Fetch known archived configurations')
     p.add_argument('--tasks', help='Comma-separated current task labels, e.g. "Task 0,Task 1"')
@@ -82,7 +83,8 @@ def parser():
     p.add_argument('--data-dir', type=Path, default=Path('data'))
     p.add_argument('--top', type=int, default=5)
     p.add_argument('--school', help='Case-insensitive school filter')
-    p.add_argument('--task', help='Task label to show in earliest-solves tables')
+    p.add_argument('--task', help='Task to show in rankings or submission history')
+    p.add_argument('--page', type=int, default=1, help='Submission history page (20 entries each)')
     p.add_argument('--format', choices=['table', 'json', 'csv'], default='table')
     p.add_argument('--output', type=Path, help='Export destination (JSON or CSV)')
     p.add_argument('--no-banner', action='store_true')
@@ -140,14 +142,35 @@ def menu():
     print_banner(console)
     while True:
         console.print("\n1. School leaderboards and fastest solves\n"
-                      "2. My submissions\n3. View saved leaderboards (offline)\n"
-                      "4. View saved submissions (offline)\n5. Set up / refresh browser login\n0. Exit")
+                      "2. My submissions\n3. View all saved results (offline)\n"
+                      "4. Browse submission text by task\n5. Set up / refresh browser login\n0. Exit")
         choice = Prompt.ask('Choose', choices=['1', '2', '3', '4', '5', '0'], default='1')
         if choice == '0':
             return 0
         commands = {'1': ['leaderboard'], '2': ['submissions'],
-                    '3': ['leaderboard', '--display'], '4': ['submissions', '--display'], '5': ['setup']}
+                    '3': ['offline'], '4': ['history'], '5': ['setup']}
         main(commands[choice])
+
+
+def offline(args):
+    console = Console()
+    found = False
+    errors = 0
+    for path in sorted(args.data_dir.glob('leaderboard_stats_*.json')):
+        match = re.fullmatch(r'leaderboard_stats_(\d{4})\.json', path.name)
+        if not match:
+            continue
+        found = True
+        console.print(f"Saved leaderboard — {match.group(1)}", style='bold cyan')
+        errors += main(['leaderboard', '--display', '--year', match.group(1), '--data-dir', str(args.data_dir), '--no-banner'])
+    if (args.data_dir / 'submission_stats.json').is_file():
+        found = True
+        console.print('Saved submission statistics', style='bold cyan')
+        errors += main(['submissions', '--display', '--data-dir', str(args.data_dir), '--no-banner'])
+        console.print('To browse saved submission text: cbc-scraper history --display')
+    if not found:
+        console.print('No saved results yet. Fetch leaderboards or submissions from the main menu first.')
+    return 1 if errors else 0
 
 
 def main(argv=None):
@@ -161,6 +184,10 @@ def main(argv=None):
             return menu()
         except (EOFError, KeyboardInterrupt):
             return 0
+    if args.page < 1:
+        p.error('--page must be positive')
+    if args.command in ('offline', 'history') and (args.format != 'table' or args.output or args.all_years):
+        p.error('offline and history use table output; export through leaderboard or submissions')
     if args.top < 1:
         p.error('--top must be positive')
     if args.output and args.format == 'table':
@@ -170,6 +197,8 @@ def main(argv=None):
     try:
         if args.command == 'setup':
             return setup(args)
+        if args.command == 'offline':
+            return offline(args)
         years = sorted(YEAR_TASKS) if args.all_years else [args.year or datetime.now(timezone.utc).year]
         client = None
         for year in years:
@@ -202,12 +231,14 @@ def main(argv=None):
                 else:
                     raw = client.submissions()
             stats = leaderboard(raw, year) if args.command == 'leaderboard' else submissions(raw)
-            report = {'kind': args.command, 'year': year, 'stats': stats}
+            report = {'kind': 'submissions' if args.command == 'history' else args.command, 'year': year, 'stats': stats}
             if not args.display:
                 report['fetched_at'] = datetime.now(timezone.utc).isoformat()
                 report['raw_data' if args.command == 'leaderboard' else 'all_submissions'] = raw
                 save(path, json.dumps(report, indent=2))
-            if args.format == 'table':
+            if args.command == 'history':
+                browse(raw, args, Console())
+            elif args.format == 'table':
                 render(report, args)
             else:
                 content = export(report, args.format)
