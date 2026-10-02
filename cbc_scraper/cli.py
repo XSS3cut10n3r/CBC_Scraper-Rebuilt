@@ -111,6 +111,11 @@ def export(report, fmt):
 
 
 def create_request_template(console):
+    console.print("One-time browser login setup", style="bold cyan")
+    console.print("1. Log in at https://nsa-codebreaker.org in your browser.\n"
+                  "2. Open Developer Tools → Network, then reload the page.\n"
+                  "3. Right-click a request to nsa-codebreaker.org → Copy as cURL.\n"
+                  "4. Paste it into edit_this_request.txt, replacing the Cookie line, and save it.")
     path = Path('edit_this_request.txt')
     try:
         descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
@@ -119,7 +124,7 @@ def create_request_template(console):
         return 0
     with os.fdopen(descriptor, 'w') as handle:
         handle.write(REQUEST_TEMPLATE)
-    console.print('Created edit_this_request.txt. Open it, follow the comments, paste your cookies, and save. Then run cbc-scraper.')
+    console.print('Created edit_this_request.txt in this folder. After saving it, choose an option from the menu.')
     return 0
 
 
