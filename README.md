@@ -34,3 +34,7 @@ Submission history shows the submitted content and API response, earliest first,
 More options: `cbc-scraper --help`. Login files and results stay local and are excluded from Git.
 
 Based on [code-zm/cbc_scraper](https://github.com/code-zm/cbc_scraper). [GPL-3.0-or-later](COPYING).
+
+## Non-affiliation notice
+
+CBC Scraper Rebuilt is an independent, unofficial project. Neither this project nor its maintainers are affiliated with, sponsored by, endorsed by, or acting on behalf of the United States National Security Agency (NSA). This software and its accompanying documentation are not authored, published, distributed, approved, or supported by the NSA. References to the NSA, the Codebreaker Challenge, and associated names, logos, or imagery identify the challenge this tool supports and do not imply official status, authorization, or endorsement.
