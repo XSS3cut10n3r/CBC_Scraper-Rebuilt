@@ -11,7 +11,15 @@ pip install -e .
 cbc-scraper
 ```
 
-Pick an option from the menu. Choose **Set up / refresh browser login** on your first run, or put your copied browser cURL request in `sample_request.txt`.
+Pick an option from the menu. For first-time login:
+
+```sh
+cbc-scraper setup --template
+```
+
+Open `edit_this_request.txt` and follow its comments to copy your browser's **Cookie** header. Paste it where indicated and save. The scraper finds it automatically. This file is ignored by Git. You can also paste a full **Copy as cURL** request there, replacing the Cookie line.
+
+Already have a saved request? Choose **Set up / refresh browser login** from the menu and enter its file path.
 
 ## Shortcuts
 

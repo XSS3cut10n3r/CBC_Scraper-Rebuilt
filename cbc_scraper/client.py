@@ -15,6 +15,11 @@ class ScraperError(Exception):
 
 
 def request_headers(text):
+    text = '\n'.join(line for line in text.splitlines() if not line.lstrip().startswith('#')).strip()
+    if 'PASTE_COOKIE_VALUE_HERE' in text or not text:
+        raise ScraperError('Login template is not filled in. Replace PASTE_COOKIE_VALUE_HERE in edit_this_request.txt with your browser Cookie header, then save and retry.')
+    if text.lower().startswith('cookie:'):
+        return {'cookie': text.split(':', 1)[1].strip()}
     tokens = shlex.split(text.replace('\\\n', ' '))
     headers = {}
     for i, token in enumerate(tokens[:-1]):

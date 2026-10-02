@@ -13,7 +13,7 @@ from rich.console import Console
 from rich.table import Table
 
 from .client import Client, ScraperError, request_headers
-from .auth import find_request
+from .auth import find_request, REQUEST_TEMPLATE
 from .config import YEAR_TASKS
 from .history import browse
 from .stats import leaderboard, submissions
@@ -79,6 +79,7 @@ def parser():
     p.add_argument('--all-years', action='store_true', help='Fetch known archived configurations')
     p.add_argument('--tasks', help='Comma-separated current task labels, e.g. "Task 0,Task 1"')
     p.add_argument('--request-file', help='Browser request file (normally found automatically)' )
+    p.add_argument('--template', action='store_true', help='Create an ignored edit_this_request.txt login guide (setup only)')
     p.add_argument('--display', action='store_true', help='Analyze cache without network access')
     p.add_argument('--data-dir', type=Path, default=Path('data'))
     p.add_argument('--top', type=int, default=5)
@@ -109,8 +110,23 @@ def export(report, fmt):
     return out.getvalue()
 
 
+def create_request_template(console):
+    path = Path('edit_this_request.txt')
+    try:
+        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    except FileExistsError:
+        console.print('edit_this_request.txt already exists. Open it to update your login; it has not been overwritten.')
+        return 0
+    with os.fdopen(descriptor, 'w') as handle:
+        handle.write(REQUEST_TEMPLATE)
+    console.print('Created edit_this_request.txt. Open it, follow the comments, paste your cookies, and save. Then run cbc-scraper.')
+    return 0
+
+
 def setup(args):
     console = Console(stderr=True)
+    if args.template:
+        return create_request_template(console)
     console.print("One-time browser login setup", style="bold cyan")
     console.print("1. Log in at https://nsa-codebreaker.org in your browser.\n"
                   "2. Open Developer Tools → Network, then reload the page.\n"
@@ -120,7 +136,9 @@ def setup(args):
     if not source:
         if not sys.stdin.isatty():
             raise ScraperError('Provide the saved file: cbc-scraper setup --request-file /path/to/request.txt')
-        source = input("Path to that file (Enter to cancel): ").strip()
+        source = input("Path to that file, or type template for a cookie paste guide (Enter to cancel): ").strip()
+        if source.lower() == "template":
+            return create_request_template(console)
         if not source:
             return 0
     try:
@@ -132,6 +150,9 @@ def setup(args):
         raise ScraperError('This request has no Cookie header. Log in, reload, and copy a new request.')
     destination = args.data_dir / 'request.txt'
     save(destination, text)
+    # Keep the auto-discovered editable file in sync when setup refreshes login.
+    if Path('edit_this_request.txt').is_file():
+        save(Path('edit_this_request.txt'), text)
     console.print("Login request saved locally. Next time, just run python scrape_submissions.py or cbc-scraper.", markup=False)
     return 0
 
@@ -184,6 +205,8 @@ def main(argv=None):
             return menu()
         except (EOFError, KeyboardInterrupt):
             return 0
+    if args.template and args.command != 'setup':
+        p.error('--template is only available with setup')
     if args.page < 1:
         p.error('--page must be positive')
     if args.command in ('offline', 'history') and (args.format != 'table' or args.output or args.all_years):
