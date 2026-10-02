@@ -39,15 +39,15 @@ def render(report, args):
         print_banner(console)
     if report['kind'] == 'submissions':
         show_status = any(row['status'] != 'Unknown' for row in report['stats'].values())
-        columns = ['Task', 'Attempts'] + (['Status'] if show_status else []) + ['Attempt span']
+        columns = ['Task', 'Attempts'] + (['Status'] if show_status else []) + ['Task interval', 'Since task0']
         table = Table(*columns)
         for task, row in report['stats'].items():
             cells = [task, str(row['attempts'])]
             if show_status:
                 cells.append(row['status'] if row['status'] != 'Unknown' else 'Not provided')
-            table.add_row(*cells, row['attempt_span'])
+            table.add_row(*cells, row['task_interval'], row['since_task0'])
         console.print(table)
-        console.print('Attempt span is time between your first and last submission, not active solving time. A single submission has a span of 0h 00m 00s.')
+        console.print('Baseline: first task0 submission. Task interval: previous task’s last submission to this task’s last submission (task0 starts at the baseline). Includes breaks; last submissions are approximate task boundaries. N/A means a missing or out-of-order boundary.')
         return
     stats = report['stats']
     console.print(f"{report['year']} | {stats['participants']:,} participants | {stats['school_count']:,} schools", markup=False)
@@ -100,7 +100,7 @@ def export(report, fmt):
             for school in row['schools']:
                 writer.writerow([report['year'], task, school['school'], school['solvers'], school['solve_rate'], school['first_solve']])
     else:
-        fields = ['attempts', 'status', 'first_attempt', 'last_attempt', 'attempt_span_hours', 'attempt_span_seconds', 'attempt_span']
+        fields = ['attempts', 'status', 'first_attempt', 'last_attempt', 'attempt_span_hours', 'attempt_span_seconds', 'attempt_span', 'task_interval_start', 'task_interval_seconds', 'task_interval', 'since_task0_seconds', 'since_task0']
         writer.writerow(['task'] + fields)
         for task, row in report['stats'].items():
             writer.writerow([task] + [row[field] for field in fields])

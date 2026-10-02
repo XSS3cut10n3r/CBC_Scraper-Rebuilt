@@ -71,7 +71,9 @@ The old `python scrape_leaderboards.py` and `python scrape_submissions.py` comma
 
 - **Fastest schools** ranks the earliest recorded first solution per task, in UTC. It does not measure time spent solving. Schools without a valid first-solve timestamp are excluded from this ranking; ties are ordered by school name.
 - **School solve rate** is task solvers divided by that school's registered participants.
-- **Attempt span** is time between first and last submissions, shown as hours, minutes, and seconds (for example `31h 52m 12s`), not active work time. A single submission has a zero span. Exports include the formatted duration and numeric seconds, alongside the existing hours field.
+- **Task interval** measures from the preceding numbered task's last submission to the current task's last submission. Task0 starts at its first submission. Times use hours, minutes, and seconds, including breaks and time before your first attempt on the next task.
+- **Since task0** measures cumulative elapsed time from your first task0 submission to each task's last submission. These are approximate task boundaries, not confirmed completion times. Missing preceding tasks or timestamps, unsupported task labels, and reversed boundaries show `N/A` rather than a fabricated interval. Without task0, cumulative times are unavailable.
+- Exports include both task intervals and cumulative durations, plus the original `attempt_span` fields (first-to-last submissions within one task) for compatibility. Cached raw submissions are reanalyzed automatically with the new calculations.
 - The submission Status column is hidden when no explicit completion statuses are available. Exports retain **Unknown** unless an explicit success/status field exists. The live API currently supplies response prose, and the old challenge-specific success hashes cannot reliably classify new tasks.
 
 Requests use timeouts, HTTPS, a cookie jar, and bounded pagination. Redirects are not followed. Current board and submission endpoints were tested with an authenticated browser request; archive configurations are inherited and have not all been live-verified.

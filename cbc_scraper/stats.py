@@ -63,7 +63,12 @@ def submissions(rows):
     for row in rows:
         groups[str(row.get('task', 'Unknown'))].append(row)
     result = {}
-    for task, attempts in sorted(groups.items()):
+    def task_order(name):
+        return tuple((0, int(part)) if part.isdigit() else (1, part.lower())
+                     for part in re.split(r'(\d+)', name))
+
+    for task in sorted(groups, key=task_order):
+        attempts = groups[task]
         times = sorted(t for t in (timestamp(r.get('at')) for r in attempts) if t)
         successes = [r for r in attempts if r.get('success') is True or r.get('passed') is True or r.get('status') in ('correct', 'passed', 'success')]
         span = (times[-1] - times[0]).total_seconds() if times else None
@@ -73,4 +78,21 @@ def submissions(rows):
                         'attempt_span_hours': round(span / 3600, 2) if span is not None else None,
                         'attempt_span_seconds': span,
                         'attempt_span': format_duration(span)}
+    baseline = next((timestamp(row['first_attempt']) for task, row in result.items()
+                     if re.fullmatch(r'task\s*0', task, re.I)), None)
+    numbered = {int(match.group(1)): row for task, row in result.items()
+                if (match := re.fullmatch(r'task\s*(\d+)', task, re.I))}
+    for task, row in result.items():
+        match = re.fullmatch(r'task\s*(\d+)', task, re.I)
+        number = int(match.group(1)) if match else None
+        previous = numbered.get(number - 1) if number is not None else None
+        start = baseline if number == 0 else timestamp(previous['last_attempt']) if previous else None
+        end = timestamp(row['last_attempt'])
+        interval = (end - start).total_seconds() if start and end and end >= start else None
+        elapsed = (end - baseline).total_seconds() if baseline and end and end >= baseline else None
+        row.update({'task_interval_start': start.isoformat() if start else None,
+                    'task_interval_seconds': interval,
+                    'task_interval': format_duration(interval),
+                    'since_task0_seconds': elapsed,
+                    'since_task0': format_duration(elapsed)})
     return result
