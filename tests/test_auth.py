@@ -28,10 +28,23 @@ class AuthTests(unittest.TestCase):
                 "curl https://nsa-codebreaker.org -H 'Cookie: cbweb_session=fake'"
             )
             data = Path(directory) / "data"
-            self.assertEqual(
-                main(["setup", "--request-file", str(source), "--data-dir", str(data)]),
-                0,
-            )
+            previous_directory = Path.cwd()
+            try:
+                os.chdir(directory)
+                self.assertEqual(
+                    main(
+                        [
+                            "setup",
+                            "--request-file",
+                            str(source),
+                            "--data-dir",
+                            str(data),
+                        ]
+                    ),
+                    0,
+                )
+            finally:
+                os.chdir(previous_directory)
             target = data / "request.txt"
             self.assertEqual(target.read_text(), source.read_text())
             self.assertEqual(target.stat().st_mode & 0o777, 0o600)
