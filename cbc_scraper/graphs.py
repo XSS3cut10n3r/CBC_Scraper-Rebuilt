@@ -231,7 +231,7 @@ def select_school(raw_data, console):
 def graph_menu(load_data, year, console):
     loaded = {}
     while True:
-        console.print("\nVIEW GRAPHS", style="bold cyan")
+        console.print("\nPROGRESS AND SOLVE-TIME GRAPHS", style="bold cyan")
         console.print(
             "1. Overall graph\n2. My graph\n3. School specific graph\n0. Back"
         )

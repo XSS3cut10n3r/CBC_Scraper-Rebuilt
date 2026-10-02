@@ -313,7 +313,7 @@ def menu():
         console.print(
             "\n1. My submissions\n"
             "2. Browse submission text by task\n3. School leaderboards and fastest solves\n"
-            "4. View graphs\n5. View all saved results (offline)\n6. Set up / refresh browser login\n0. Exit"
+            "4. View progress and solve-time graphs\n5. View all saved results (offline)\n6. Set up / refresh browser login\n0. Exit"
         )
         choice = Prompt.ask(
             "Choose", choices=["1", "2", "3", "4", "5", "6", "0"], default="1"
@@ -540,7 +540,7 @@ def load_graph_data(args, kind, year):
         "raw_data" if kind == "leaderboard" else "all_submissions": raw_data,
     }
     save(path, json.dumps(report, indent=2))
-    return raw_data, f"Fetched {fetched_at} | Reopen View graphs to refresh."
+    return raw_data, f"Fetched {fetched_at} | Reopen View progress and solve-time graphs to refresh."
 
 
 def main(argv=None):
@@ -565,7 +565,7 @@ def main(argv=None):
         if args.command == "graphs":
             if not sys.stdin.isatty():
                 raise ScraperError(
-                    "View graphs needs an interactive terminal. Run cbc-scraper and choose View graphs."
+                    "View progress and solve-time graphs needs an interactive terminal. Run cbc-scraper and choose View progress and solve-time graphs."
                 )
             year = args.year or datetime.now(timezone.utc).year
             return graph_menu(

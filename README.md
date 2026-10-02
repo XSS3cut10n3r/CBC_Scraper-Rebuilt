@@ -37,7 +37,7 @@ cbc-scraper offline                           # All saved results, offline
 cbc-scraper history                           # Browse submission text by task
 ```
 
-**View graphs** is option 4. Personal graphs include an `s` toggle for linear/logarithmic scales. School graphs compare registered participants’ solve rates with overall rates. Use `cbc-scraper graphs --display` for saved data.
+**View progress and solve-time graphs** is option 4. Personal graphs include an `s` toggle for linear/logarithmic scales. School graphs compare registered participants’ solve rates with overall rates. Use `cbc-scraper graphs --display` for saved data.
 
 Submission history shows the submitted content and API response, earliest first, in pages of 20. Select an entry number to read long text in full. Use `cbc-scraper history --display` to browse saved submissions offline.
 
