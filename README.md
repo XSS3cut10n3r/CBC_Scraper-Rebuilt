@@ -1,5 +1,12 @@
 ![Codebreaker Challenge Stats (Unofficial)](assets/readme-banner.png)
 
+<p align="center">
+  <a href="#get-started"><img alt="Python: 3.9+" src="assets/badges/python.svg"></a>
+  <a href="https://github.com/XSS3cut10n3r/CBC_Scraper-Rebuilt/actions/workflows/tests.yml"><img alt="CI status" src="https://github.com/XSS3cut10n3r/CBC_Scraper-Rebuilt/actions/workflows/tests.yml/badge.svg?branch=main"></a>
+  <a href="pyproject.toml"><img alt="Project version: 0.2.0" src="assets/badges/version.svg"></a>
+  <a href="COPYING"><img alt="License: GPL-3.0-or-later" src="assets/badges/license.svg"></a>
+</p>
+
 Based on [code-zm/cbc_scraper](https://github.com/code-zm/cbc_scraper). Thank you to [code-zm](https://github.com/code-zm) for creating the original project.
 
 School leaderboards, fastest first solves, and your personal task times in the terminal.
