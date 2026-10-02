@@ -12,7 +12,8 @@ from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 
-from .client import Client, ScraperError
+from .client import Client, ScraperError, request_headers
+from .auth import find_request
 from .config import YEAR_TASKS
 from .stats import leaderboard, submissions
 
@@ -77,11 +78,11 @@ def render(report, args):
 
 def parser():
     p = argparse.ArgumentParser(description='Unofficial NSA Codebreaker statistics')
-    p.add_argument('command', choices=['leaderboard', 'submissions'], nargs='?', default='leaderboard')
+    p.add_argument('command', choices=['leaderboard', 'submissions', 'setup', 'menu'], nargs='?', default='leaderboard')
     p.add_argument('--year', type=int, help='Archived challenge year (omit for current board)')
     p.add_argument('--all-years', action='store_true', help='Fetch known archived configurations')
     p.add_argument('--tasks', help='Comma-separated current task labels, e.g. "Task 0,Task 1"')
-    p.add_argument('--request-file', help='Local copied cURL request; never executed')
+    p.add_argument('--request-file', help='Browser request file (normally found automatically)' )
     p.add_argument('--display', action='store_true', help='Analyze cache without network access')
     p.add_argument('--data-dir', type=Path, default=Path('data'))
     p.add_argument('--top', type=int, default=5)
@@ -110,9 +111,60 @@ def export(report, fmt):
     return out.getvalue()
 
 
+def setup(args):
+    console = Console(stderr=True)
+    console.print("One-time browser login setup", style="bold cyan")
+    console.print("1. Log in at https://nsa-codebreaker.org in your browser.\n"
+                  "2. Open Developer Tools → Network, then reload the page.\n"
+                  "3. Right-click a request to nsa-codebreaker.org → Copy as cURL.\n"
+                  "4. Paste it into a text file and save it.")
+    source = args.request_file
+    if not source:
+        if not sys.stdin.isatty():
+            raise ScraperError('Provide the saved file: cbc-scraper setup --request-file /path/to/request.txt')
+        source = input("Path to that file (Enter to cancel): ").strip()
+        if not source:
+            return 0
+    try:
+        text = Path(source).expanduser().read_text()
+        headers = request_headers(text)
+    except (OSError, ValueError):
+        raise ScraperError('Could not read that browser request. Check the file path and copy it as cURL.') from None
+    if not headers.get('cookie'):
+        raise ScraperError('This request has no Cookie header. Log in, reload, and copy a new request.')
+    destination = args.data_dir / 'request.txt'
+    save(destination, text)
+    console.print("Login request saved locally. Next time, just run python scrape_submissions.py or cbc-scraper.", markup=False)
+    return 0
+
+
+def menu():
+    from rich.prompt import Prompt
+    console = Console()
+    console.print(BANNER, style='bold cyan', markup=False)
+    while True:
+        console.print("\n1. School leaderboards and fastest solves\n"
+                      "2. My submissions\n3. View saved leaderboards (offline)\n"
+                      "4. View saved submissions (offline)\n5. Set up / refresh browser login\n0. Exit")
+        choice = Prompt.ask('Choose', choices=['1', '2', '3', '4', '5', '0'], default='1')
+        if choice == '0':
+            return 0
+        commands = {'1': ['leaderboard'], '2': ['submissions'],
+                    '3': ['leaderboard', '--display'], '4': ['submissions', '--display'], '5': ['setup']}
+        main(commands[choice])
+
+
 def main(argv=None):
     p = parser()
+    argv = list(sys.argv[1:] if argv is None else argv)
     args = p.parse_args(argv)
+    if args.command == 'menu' or (not argv and sys.stdin.isatty()):
+        if not sys.stdin.isatty():
+            p.error('The menu needs an interactive terminal. Use leaderboard or submissions instead.')
+        try:
+            return menu()
+        except (EOFError, KeyboardInterrupt):
+            return 0
     if args.top < 1:
         p.error('--top must be positive')
     if args.output and args.format == 'table':
@@ -120,11 +172,15 @@ def main(argv=None):
     if args.all_years and (args.year or args.command == 'submissions' or args.output or args.format != 'table'):
         p.error('--all-years requires leaderboard table output without --year or --output')
     try:
+        if args.command == 'setup':
+            return setup(args)
         years = sorted(YEAR_TASKS) if args.all_years else [args.year or datetime.now(timezone.utc).year]
         client = None
         for year in years:
             path = args.data_dir / (f'leaderboard_stats_{year}.json' if args.command == 'leaderboard' else 'submission_stats.json')
             if args.display:
+                if not path.is_file():
+                    raise ScraperError('No saved results yet. Run cbc-scraper ' + args.command + ' first to download them.')
                 cached = json.loads(path.read_text())
                 raw = cached.get('raw_data') if args.command == 'leaderboard' else cached.get('all_submissions')
                 if raw is None:
@@ -132,7 +188,10 @@ def main(argv=None):
             else:
                 labels = [s.strip() for s in args.tasks.split(',') if s.strip()] if args.tasks else YEAR_TASKS.get(year)
                 if client is None:
-                    client = Client(args.request_file)
+                    request = find_request(args.request_file, args.data_dir)
+                    if args.format == 'table':
+                        Console(stderr=True).print('Using saved browser login. Fetching ' + args.command + '…', markup=False)
+                    client = Client(request)
                     html = client.bootstrap()
                 if args.command == "leaderboard" and not args.year and not args.all_years and not args.tasks:
                     labels = list(dict.fromkeys(re.findall(r"Task\s+[0-9]+[ab]?", html)))
@@ -160,6 +219,8 @@ def main(argv=None):
                     save(args.output, content)
                 else:
                     print(content, end='')
+        return 0
+    except (EOFError, KeyboardInterrupt):
         return 0
     except ScraperError as error:
         Console(stderr=True).print(str(error), markup=False)

@@ -52,7 +52,7 @@ class Client:
             response = self.session.request('POST' if data is not None else 'GET', BASE + path,
                                             data=data, timeout=(10, 45), allow_redirects=False)
             if response.status_code in (301, 302, 303, 307, 308, 401, 403):
-                raise ScraperError('Site denied or redirected the request. Refresh your browser cookie/request file.')
+                raise ScraperError('The website did not accept your saved login (it may have expired). Run cbc-scraper setup to save a fresh browser request, then retry.')
             response.raise_for_status()
             return response
         except requests.RequestException:

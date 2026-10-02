@@ -12,17 +12,41 @@ source .venv/bin/activate
 pip install -e .
 ```
 
-## Authentication
+## Start here
 
-In your browser's developer tools, copy a request to nsa-codebreaker.org as cURL and save it locally as `sample_request.txt` or `data/request.txt`. Pass its path with `--request-file`. The text is parsed, never executed. All cookie names are retained, including the current `cbweb_session` and `remember_token`; CSRF is refreshed from the leaderboard page. Cookies are neither printed nor written to the result cache. Request files and data are excluded from Git; keep differently named credential files outside the repository.
-
-Alternatively set `CBC_COOKIE` to the complete Cookie header value and optionally `CBC_CSRF_TOKEN`. No password login is required. Expired cookies require a fresh browser request.
+With your virtual environment active, run:
 
 ```sh
-cbc-scraper --request-file sample_request.txt
-cbc-scraper --request-file sample_request.txt --task 'Task 8' --top 10
-cbc-scraper --request-file sample_request.txt --school 'Georgia'
-cbc-scraper submissions --request-file sample_request.txt
+cbc-scraper
+```
+
+Choose a number from the menu: school leaderboards, your submissions, saved results, or login setup. You can also open the menu with `python -m cbc_scraper`.
+
+The original scripts work without flags once login is saved:
+
+```sh
+python scrape_submissions.py
+python scrape_leaderboards.py
+```
+
+## First-time login (or an expired session)
+
+```sh
+cbc-scraper setup
+```
+
+The setup walks you through copying a browser request and asks for the saved file's path. It saves a private local copy in `data/request.txt`; future runs find it automatically. You only repeat setup when your browser login expires.
+
+If you already have `sample_request.txt`, place it in this project folder and run either script. No setup command or request-file flag is needed.
+
+Advanced options: `--request-file /path/to/request.txt` or `CBC_REQUEST_FILE` selects a specific file. `CBC_COOKIE` supplies cookies directly, and `CBC_CSRF_TOKEN` can supply a token. Automatic discovery checks `sample_request.txt` and `data/request.txt` in the working directory, then the project directory. An explicit request file takes precedence, followed by environment configuration, then automatic discovery. If both conventional files exist, `sample_request.txt` takes precedence.
+
+Copied cURL text is parsed, never executed. Cookie names including `cbweb_session` and `remember_token` are retained, and CSRF is refreshed from the leaderboard page. Cookies are never printed or included in exported results. Login files and data are excluded from Git; keep differently named credential files outside the repository.
+
+```sh
+cbc-scraper leaderboard --task 'Task 8' --top 10
+cbc-scraper leaderboard --school 'Georgia'
+cbc-scraper submissions
 ```
 
 ## Cache and export
