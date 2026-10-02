@@ -1,11 +1,16 @@
-YEAR_TASKS = {
-    2018: ["Task 0", "Task 1", "Task 2", "Task 3", "Task 4", "Task 5", "Task 6", "Task 7"],
-    2019: ["Task 1", "Task 2", "Task 3", "Task 4", "Task 5", "Task 6a", "Task 6b", "Task 7"],
-    2020: ["Task 1", "Task 2", "Task 3", "Task 4", "Task 5", "Task 6", "Task 7", "Task 8", "Task 9"],
-    2021: ["Task 0", "Task 1", "Task 2", "Task 3", "Task 4", "Task 5", "Task 6", "Task 7", "Task 8", "Task 9", "Task 10"],
-    2022: ["Task 0", "Task a1", "Task a2", "Task b1", "Task b2", "Task 5", "Task 6", "Task 7", "Task 8", "Task 9"],
-    2023: ["Task 0", "Task 1", "Task 2", "Task 3", "Task 4", "Task 5", "Task 6", "Task 7", "Task 8", "Task 9"],
-    2024: ["Task 0", "Task 1", "Task 2", "Task 3", "Task 4", "Task 5", "Task 6", "Task 7"],
-    2025: ["Task 0", "Task 1", "Task 2", "Task 3", "Task 4", "Task 5", "Task 6", "Task 7"],
-}
+from types import MappingProxyType
 
+YEAR_TASKS = MappingProxyType(
+    {
+        2018: tuple(f"Task {number}" for number in range(8)),
+        2019: tuple(f"Task {number}" for number in (1, 2, 3, 4, 5, "6a", "6b", 7)),
+        2020: tuple(f"Task {number}" for number in range(1, 10)),
+        2021: tuple(f"Task {number}" for number in range(11)),
+        2022: tuple(
+            f"Task {number}" for number in (0, "a1", "a2", "b1", "b2", 5, 6, 7, 8, 9)
+        ),
+        2023: tuple(f"Task {number}" for number in range(10)),
+        2024: tuple(f"Task {number}" for number in range(8)),
+        2025: tuple(f"Task {number}" for number in range(8)),
+    }
+)
