@@ -39,7 +39,7 @@ def render(report, args):
         print_banner(console)
     if report['kind'] == 'submissions':
         show_status = any(row['status'] != 'Unknown' for row in report['stats'].values())
-        columns = ['Task', 'Attempts'] + (['Status'] if show_status else []) + ['Task interval', 'Since task0']
+        columns = ['Task', 'Attempts'] + (['Status'] if show_status else []) + ['Solve Time', 'Total']
         table = Table(*columns)
         for task, row in report['stats'].items():
             cells = [task, str(row['attempts'])]
@@ -47,7 +47,7 @@ def render(report, args):
                 cells.append(row['status'] if row['status'] != 'Unknown' else 'Not provided')
             table.add_row(*cells, row['task_interval'], row['since_task0'])
         console.print(table)
-        console.print('Baseline: first task0 submission. Task interval: previous task’s last submission to this task’s last submission (task0 starts at the baseline). Includes breaks; last submissions are approximate task boundaries. N/A means a missing or out-of-order boundary.')
+        console.print('Baseline: first task0 submission. Solve Time: previous task’s last submission to this task’s last submission (task0 starts at the baseline). Includes breaks; last submissions are approximate task boundaries. N/A means a missing or out-of-order boundary.')
         return
     stats = report['stats']
     console.print(f"{report['year']} | {stats['participants']:,} participants | {stats['school_count']:,} schools", markup=False)
