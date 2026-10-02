@@ -169,7 +169,7 @@ def menu():
         if choice == '0':
             return 0
         commands = {'1': ['submissions'], '2': ['history'],
-                    '3': ['leaderboard'], '4': ['offline'], '5': ['setup']}
+                    '3': ['leaderboard'], '4': ['offline'], '5': ['setup', '--template']}
         main(commands[choice])
 
 
