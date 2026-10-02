@@ -7,7 +7,7 @@ from cbc_scraper.cli import menu
 class MenuTests(unittest.TestCase):
     def test_choices_dispatch_without_changing_order(self):
         with patch(
-            "rich.prompt.Prompt.ask", side_effect=["1", "2", "3", "4", "5", "0"]
+            "rich.prompt.Prompt.ask", side_effect=["1", "2", "3", "4", "5", "6", "0"]
         ), patch("cbc_scraper.cli.main") as run_command, patch(
             "cbc_scraper.cli.Console"
         ), patch(
@@ -20,6 +20,7 @@ class MenuTests(unittest.TestCase):
                 call(["submissions"]),
                 call(["history"]),
                 call(["leaderboard"]),
+                call(["graphs"]),
                 call(["offline"]),
                 call(["setup", "--template"]),
             ],

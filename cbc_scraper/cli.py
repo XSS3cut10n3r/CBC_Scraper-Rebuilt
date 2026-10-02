@@ -18,6 +18,7 @@ from .client import Client, ScraperError, request_headers
 from .auth import find_request, REQUEST_TEMPLATE
 from .config import YEAR_TASKS
 from .history import browse
+from .graphs import graph_menu
 from .stats import leaderboard, submissions
 
 from .banner import print_banner
@@ -125,7 +126,15 @@ def parser():
     )
     argument_parser.add_argument(
         "command",
-        choices=["leaderboard", "submissions", "setup", "menu", "offline", "history"],
+        choices=[
+            "leaderboard",
+            "submissions",
+            "setup",
+            "menu",
+            "offline",
+            "history",
+            "graphs",
+        ],
         nargs="?",
         default="leaderboard",
     )
@@ -304,10 +313,10 @@ def menu():
         console.print(
             "\n1. My submissions\n"
             "2. Browse submission text by task\n3. School leaderboards and fastest solves\n"
-            "4. View all saved results (offline)\n5. Set up / refresh browser login\n0. Exit"
+            "4. View graphs\n5. View all saved results (offline)\n6. Set up / refresh browser login\n0. Exit"
         )
         choice = Prompt.ask(
-            "Choose", choices=["1", "2", "3", "4", "5", "0"], default="1"
+            "Choose", choices=["1", "2", "3", "4", "5", "6", "0"], default="1"
         )
         if choice == "0":
             return 0
@@ -315,8 +324,9 @@ def menu():
             "1": ["submissions"],
             "2": ["history"],
             "3": ["leaderboard"],
-            "4": ["offline"],
-            "5": ["setup", "--template"],
+            "4": ["graphs"],
+            "5": ["offline"],
+            "6": ["setup", "--template"],
         }
         main(commands[choice])
 
@@ -423,11 +433,11 @@ def validate_arguments(argument_parser, args):
         argument_parser.error("--template is only available with setup")
     if args.page < 1:
         argument_parser.error("--page must be positive")
-    if args.command in ("offline", "history") and (
+    if args.command in ("offline", "history", "graphs") and (
         args.format != "table" or args.output or args.all_years
     ):
         argument_parser.error(
-            "offline and history use table output; export through leaderboard or submissions"
+            "offline, history, and graphs use table output; export through leaderboard or submissions"
         )
     if args.top < 1:
         argument_parser.error("--top must be positive")
@@ -495,6 +505,44 @@ def run_reports(args):
     return 0
 
 
+def load_graph_data(args, kind, year):
+    graph_args = argparse.Namespace(**vars(args))
+    graph_args.command = kind
+    path = args.data_dir / (
+        f"leaderboard_stats_{year}.json"
+        if kind == "leaderboard"
+        else "submission_stats.json"
+    )
+    if args.display:
+        raw_data = load_cached_data(path, kind)
+        fetched_at = json.loads(path.read_text()).get(
+            "fetched_at", "timestamp unavailable"
+        )
+        return raw_data, f"Saved data | {fetched_at}"
+    Console(stderr=True).print("Fetching graph data...", style="dim")
+    client = Client(find_request(args.request_file, args.data_dir))
+    leaderboard_html = client.bootstrap()
+    labels = (
+        [label.strip() for label in args.tasks.split(",") if label.strip()]
+        if args.tasks
+        else YEAR_TASKS.get(year)
+    )
+    raw_data = fetch_data(client, leaderboard_html, labels, graph_args, year)
+    stats = (
+        leaderboard(raw_data, year) if kind == "leaderboard" else submissions(raw_data)
+    )
+    fetched_at = datetime.now(timezone.utc).isoformat()
+    report = {
+        "kind": kind,
+        "year": year,
+        "stats": stats,
+        "fetched_at": fetched_at,
+        "raw_data" if kind == "leaderboard" else "all_submissions": raw_data,
+    }
+    save(path, json.dumps(report, indent=2))
+    return raw_data, f"Fetched {fetched_at} | Reopen View graphs to refresh."
+
+
 def main(argv=None):
     argument_parser = parser()
     argv = list(sys.argv[1:] if argv is None else argv)
@@ -514,6 +562,15 @@ def main(argv=None):
             return setup(args)
         if args.command == "offline":
             return offline(args)
+        if args.command == "graphs":
+            if not sys.stdin.isatty():
+                raise ScraperError(
+                    "View graphs needs an interactive terminal. Run cbc-scraper and choose View graphs."
+                )
+            year = args.year or datetime.now(timezone.utc).year
+            return graph_menu(
+                lambda kind: load_graph_data(args, kind, year), year, Console()
+            )
         return run_reports(args)
     except (EOFError, KeyboardInterrupt):
         return 0

@@ -20,11 +20,11 @@ pip install -e .
 cbc-scraper
 ```
 
-Choose **5. Set up / refresh browser login** from the menu. This creates `edit_this_request.txt` for you.
+Choose **6. Set up / refresh browser login** from the menu. This creates `edit_this_request.txt` for you.
 
 Open `edit_this_request.txt` and follow its comments to copy your browser's **Cookie** header. Paste it where indicated and save. The scraper finds it automatically. This file is ignored by Git. You can also paste a full **Copy as cURL** request there, replacing the Cookie line.
 
-To refresh an expired login, choose **5** again and replace the cookies in the same file. Existing contents are preserved.
+To refresh an expired login, choose **6** again and replace the cookies in the same file. Existing contents are preserved.
 
 ## Shortcuts
 
@@ -32,9 +32,12 @@ To refresh an expired login, choose **5** again and replace the cookies in the s
 cbc-scraper submissions                       # Your attempts and times
 cbc-scraper leaderboard --task 'Task 8'       # Earliest school solves
 cbc-scraper leaderboard --school 'Georgia'   # Filter schools
+cbc-scraper graphs                            # Overall, personal, and school graphs
 cbc-scraper offline                           # All saved results, offline
 cbc-scraper history                           # Browse submission text by task
 ```
+
+**View graphs** is option 4. Personal graphs include an `s` toggle for linear/logarithmic scales. School graphs compare registered participants’ solve rates with overall rates. Use `cbc-scraper graphs --display` for saved data.
 
 Submission history shows the submitted content and API response, earliest first, in pages of 20. Select an entry number to read long text in full. Use `cbc-scraper history --display` to browse saved submissions offline.
 
