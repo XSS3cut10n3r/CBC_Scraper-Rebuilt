@@ -141,14 +141,14 @@ def menu():
     console = Console()
     print_banner(console)
     while True:
-        console.print("\n1. School leaderboards and fastest solves\n"
-                      "2. My submissions\n3. View all saved results (offline)\n"
-                      "4. Browse submission text by task\n5. Set up / refresh browser login\n0. Exit")
+        console.print("\n1. My submissions\n"
+                      "2. Browse submission text by task\n3. School leaderboards and fastest solves\n"
+                      "4. View all saved results (offline)\n5. Set up / refresh browser login\n0. Exit")
         choice = Prompt.ask('Choose', choices=['1', '2', '3', '4', '5', '0'], default='1')
         if choice == '0':
             return 0
-        commands = {'1': ['leaderboard'], '2': ['submissions'],
-                    '3': ['offline'], '4': ['history'], '5': ['setup']}
+        commands = {'1': ['submissions'], '2': ['history'],
+                    '3': ['leaderboard'], '4': ['offline'], '5': ['setup']}
         main(commands[choice])
 
 
