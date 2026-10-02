@@ -66,29 +66,36 @@ def browse(rows, args, console):
     selected = args.task
     while True:
         if selected is None:
-            table = Table('Choose task', 'Task', 'Submissions')
-            for index, task in enumerate(tasks, 1):
-                table.add_row(str(index), Text(task), str(len(groups[task])))
+            table = Table('Task', 'Submissions')
+            task_choices = {}
+            for task in tasks:
+                match = re.fullmatch(r'task\s*(\d+[a-z]?)', task, re.I)
+                key = match.group(1) if match else task
+                task_choices[key] = task
+                table.add_row(Text(key), str(len(groups[task])))
             console.print(table)
-            choice = Prompt.ask('Task number (0 to return)', choices=['0']+[str(i) for i in range(1, len(tasks)+1)], console=console)
-            if choice == '0':
+            choice = Prompt.ask('Task number · q: Back', choices=list(task_choices) + ['q'], show_choices=False, console=console)
+            if choice == 'q':
                 return
-            selected = tasks[int(choice)-1]
+            selected = task_choices[choice]
         task = next((t for t in tasks if t.replace(' ', '').casefold() == selected.replace(' ', '').casefold()), None)
         if task is None:
             raise ScraperError('No submissions for that task. Run cbc-scraper history to choose a task.')
         entries = ordered(groups[task])
-        page = args.page
+        page = args.page if args.task and selected == args.task else 1
         while True:
             console.print(page_table(task, entries, page))
-            console.print('Earliest first. 20 entries per page; long text is previewed. UTF-8 hex is decoded; other payloads are shown as supplied.')
+            console.print('Oldest first · Up to 20 per page · Enter a submission # for full text.')
             if not interactive:
                 console.print('Use --page N for another page; run in a terminal to open full entries.')
                 return
             pages = max(1, (len(entries)+PAGE_SIZE-1)//PAGE_SIZE)
             choices = ['t', 'q'] + (['n'] if page < pages else []) + (['p'] if page > 1 else [])
             choices += [str(i) for i in range((page-1)*PAGE_SIZE+1, min(page*PAGE_SIZE, len(entries))+1)]
-            action = Prompt.ask('n next / p previous / entry number for full text / t tasks / q return', choices=choices, show_choices=False, console=console)
+            navigation = (['n: Next page'] if page < pages else []) + (['p: Previous page'] if page > 1 else [])
+            navigation += ['t: Change task', 'q: Main menu']
+            console.print(' · '.join(navigation))
+            action = Prompt.ask('Submission # or shortcut', choices=choices, show_choices=False, console=console)
             if action == 'q':
                 return
             if action == 't':

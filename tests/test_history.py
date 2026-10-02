@@ -33,11 +33,23 @@ class HistoryTests(unittest.TestCase):
         stream = io.StringIO()
         rows = [{'task': 'task0', 'at': i+1, 'hexdata': '6869', 'response': 'response-'+str(i)} for i in range(21)]
         args = SimpleNamespace(task=None, page=1)
-        with patch('sys.stdin.isatty', return_value=True), patch('cbc_scraper.history.Prompt.ask', side_effect=['1','n','21','','p','t','0']):
+        with patch('sys.stdin.isatty', return_value=True), patch('cbc_scraper.history.Prompt.ask', side_effect=['0','n','21','','p','t','q']):
             browse(rows, args, Console(file=stream, width=120))
         self.assertIn('page 2/2', stream.getvalue())
         self.assertIn('Submission #21', stream.getvalue())
         self.assertIn('response-20', stream.getvalue())
+
+
+    def test_actual_task_number_with_gaps(self):
+        stream = io.StringIO()
+        rows = [{'task': 'task0', 'at': 1}, {'task': 'task8', 'at': 2}]
+        with patch('sys.stdin.isatty', return_value=True), patch('cbc_scraper.history.Prompt.ask', side_effect=['8', 'q']) as prompt:
+            browse(rows, SimpleNamespace(task=None, page=1), Console(file=stream, width=120))
+        self.assertIn('task8 — 1 submissions', stream.getvalue())
+        self.assertEqual(prompt.call_args_list[0].kwargs['choices'], ['0', '8', 'q'])
+        self.assertNotIn('Next page', stream.getvalue())
+        self.assertNotIn('Previous page', stream.getvalue())
+        self.assertNotIn('UTF-8', stream.getvalue())
 
     def test_offline_reads_all_caches_and_never_connects(self):
         with tempfile.TemporaryDirectory() as folder:
