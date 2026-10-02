@@ -11,6 +11,7 @@ from pathlib import Path
 
 from rich.console import Console
 from rich.table import Table
+from rich.panel import Panel
 
 from .client import Client, ScraperError, request_headers
 from .auth import find_request, REQUEST_TEMPLATE
@@ -111,20 +112,26 @@ def export(report, fmt):
 
 
 def create_request_template(console):
-    console.print("One-time browser login setup", style="bold cyan")
-    console.print("1. Log in at https://nsa-codebreaker.org in your browser.\n"
-                  "2. Open Developer Tools → Network, then reload the page.\n"
-                  "3. Right-click a request to nsa-codebreaker.org → Copy as cURL.\n"
-                  "4. Paste it into edit_this_request.txt, replacing the Cookie line, and save it.")
     path = Path('edit_this_request.txt')
     try:
         descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     except FileExistsError:
-        console.print('edit_this_request.txt already exists. Open it to update your login; it has not been overwritten.')
-        return 0
-    with os.fdopen(descriptor, 'w') as handle:
-        handle.write(REQUEST_TEMPLATE)
-    console.print('Created edit_this_request.txt in this folder. After saving it, choose an option from the menu.')
+        status = 'edit_this_request.txt already exists. Open it to update your login; it has not been overwritten.'
+    else:
+        with os.fdopen(descriptor, 'w') as handle:
+            handle.write(REQUEST_TEMPLATE)
+        status = 'Created edit_this_request.txt in this folder. After saving it, choose an option from the menu.'
+    instructions = (
+        "1. Log in at https://nsa-codebreaker.org in your browser.\n\n"
+        "2. Open Developer Tools → Network, then reload the page.\n\n"
+        "3. Right-click a request to nsa-codebreaker.org → Copy as cURL.\n\n"
+        "4. Paste it into [bold]edit_this_request.txt[/bold], replacing the Cookie line, and save it."
+    )
+    console.print()
+    console.print(Panel(instructions + '\n\n[dim]' + status + '[/dim]',
+                        title='[bold cyan]One-time browser login setup[/bold cyan]',
+                        border_style='cyan', padding=(1, 2)))
+    console.print()
     return 0
 
 
