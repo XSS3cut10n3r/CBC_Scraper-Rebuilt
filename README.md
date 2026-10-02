@@ -1,5 +1,7 @@
 ![Codebreaker Challenge Stats (Unofficial)](assets/readme-banner.png)
 
+Based on [code-zm/cbc_scraper](https://github.com/code-zm/cbc_scraper). Thank you to [code-zm](https://github.com/code-zm) for creating the original project.
+
 School leaderboards, fastest first solves, and your personal task times in the terminal.
 
 ## Get started
@@ -33,7 +35,7 @@ Submission history shows the submitted content and API response, earliest first,
 
 More options: `cbc-scraper --help`. Login files and results stay local and are excluded from Git.
 
-Based on [code-zm/cbc_scraper](https://github.com/code-zm/cbc_scraper). [GPL-3.0-or-later](COPYING).
+[GPL-3.0-or-later](COPYING).
 
 ## Non-affiliation notice
 
