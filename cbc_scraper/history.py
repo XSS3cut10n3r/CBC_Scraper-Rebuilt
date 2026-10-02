@@ -66,15 +66,15 @@ def browse(rows, args, console):
     selected = args.task
     while True:
         if selected is None:
-            table = Table('Task', 'Submissions')
+            table = Table('Choose task', 'Task', 'Submissions')
             task_choices = {}
             for task in tasks:
                 match = re.fullmatch(r'task\s*(\d+[a-z]?)', task, re.I)
                 key = match.group(1) if match else task
                 task_choices[key] = task
-                table.add_row(Text(key), str(len(groups[task])))
+                table.add_row(Text(key), Text(task), str(len(groups[task])))
             console.print(table)
-            choice = Prompt.ask('Task number · q: Back', choices=list(task_choices) + ['q'], show_choices=False, console=console)
+            choice = Prompt.ask('Enter the task number to view its submissions (q to return to the main menu)', choices=list(task_choices) + ['q'], show_choices=False, console=console)
             if choice == 'q':
                 return
             selected = task_choices[choice]
